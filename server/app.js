@@ -1,6 +1,7 @@
 var path = require('path');
 var express = require('express');
 var FlashCardModel = require('./models/flash-card-model');
+var bodyParser = require("body-parser");
 
 var app = express(); // Create an express app!
 module.exports = app; // Export it so it can be require('')'d
@@ -20,30 +21,41 @@ var indexHtmlPath = path.join(__dirname, '../index.html');
 // When our server gets a request and the url matches
 // something in our public folder, serve up that file
 // e.g. angular.js, style.css
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded());
+
 app.use(express.static(publicPath));
 
 // If we're hitting our home page, serve up our index.html file!
-app.get('/', function (req, res) {
-    res.sendFile(indexHtmlPath);
+app.get('/', function(req, res) {
+  res.sendFile(indexHtmlPath);
 });
 
-app.use(function (req, res, next) {
-	console.log('made it')
-	next();
+app.use(function(req, res, next) {
+  next();
 });
 
-app.get('/cards', function (req, res) {
+app.get('/cards', function(req, res) {
 
-    var modelParams = {};
+  var modelParams = {};
 
-    if (req.query.category) {
-    	modelParams.category = req.query.category;
-    }
+  if (req.query.category) {
+    modelParams.category = req.query.category;
+  }
 
-    FlashCardModel.find(modelParams, function (err, cards) {
-        setTimeout(function () {
-            res.send(cards);
-        }, 500 + Math.random() * 1000);
-    });
+  FlashCardModel.find(modelParams, function(err, cards) {
+    setTimeout(function() {
+      res.send(cards);
+    }, 500 + Math.random() * 1000);
+  });
+
+});
+
+app.post('/cards', function(req, res, next) {
+  var info = req.body;
+  FlashCardModel.create(info).then(function(card) {
+    res.json(card);
+  }).then(null, next);
 
 });
